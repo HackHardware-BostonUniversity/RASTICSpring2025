@@ -24,6 +24,9 @@ bool isMoveBackwardOn = 0;
 bool isRotateLeftOn = 0;
 bool isRotateRightOn = 0;
 
+// Variable to store the state we transitioned from
+String previousState;
+
 // Assign output variables to GPIO pins
 const int output26 = 26;
 const int output27 = 27;
@@ -53,6 +56,10 @@ void RotateRight(){
 
   return;
 }
+void Stationary(){
+
+  return;
+}
 
 // Current time
 unsigned long currentTime = millis();
@@ -64,7 +71,7 @@ const long timeoutTime = 2000;
 void setup() {
   Serial.begin(115200);
   // Sends a Hello World Debug message
-  Serial.print("Starting RASTICxHackH Spring 2025 Controller...")
+  Serial.println("Starting RASTICxHackH Spring 2025 Controller...")
   
   // Set outputs to LOW
   digitalWrite(output26, LOW);
@@ -115,217 +122,113 @@ void loop(){
             client.println("Content-type:text/html");
             client.println("Connection: close");
             client.println();
-            
+// Move Left
             // turns the GPIOs on and off
             if (header.indexOf("GET /MoveLeftOn") >= 0) {
-              // Prints that we're moving Left
+              // Prints that we're moving left
               Serial.println("MoveLeft");
 
-              // Turns off all other motion
-              if(outputRightState){
-                MoveRight(0);
-                outputRightState = 0;
-              }
-              if(outputForwardState){
-                MoveForward(0);
-                outputForwardState = 0;
-              }
-              if(outputBackwardState){
-                MoveBackward(0);
-                outputBackwardState = 0;
-              }
-              if(outputRotLeftState){
-                RotateLeft(0);
-                outputRotLeftState = 0;
-              }
-              if(outputRotRightState){
-                RotateRight(0);
-                outputRotRightState = 0;
-              }
-
-              // Sets that we're moving Left
-              outputLeftState = 1;
-              // Turns on the Move Left
-              MoveLeft(1);
+              // Sets flags that we're moving left
+              isMoveLeftOn = 1;
+              isMoveRightOn = 0;
+              isMoveForwardOn = 0;
+              isMoveBackwardOn = 0;
+              isRotateLeftOn = 0;
+              isRotateRightOn = 0;
               
+              // Turns on pins to move left
+              MoveLeft();
+// Move Right
             } else if (header.indexOf("GET /MoveRightOn") >= 0) {
-              // Prints that we're moving Right
+              // Prints that we're moving right
               Serial.println("MoveRight");
 
-              // Turns off all other motion
-              if(outputLeftState){
-                MoveLeft(0);
-                outputLeftState = 0;
-              }
-              if(outputForwardState){
-                MoveForward(0);
-                outputForwardState = 0;
-              }
-              if(outputBackwardState){
-                MoveBackward(0);
-                outputBackwardState = 0;
-              }
-              if(outputRotLeftState){
-                RotateLeft(0);
-                outputRotLeftState = 0;
-              }
-              if(outputRotRightState){
-                RotateRight(0);
-                outputRotRightState = 0;
-              }
+              // Sets flags that we're moving right
+              isMoveLeftOn = 0;
+              isMoveRightOn = 1;
+              isMoveForwardOn = 0;
+              isMoveBackwardOn = 0;
+              isRotateLeftOn = 0;
+              isRotateRightOn = 0;
 
-              // Sets that we're moving Right
-              outputRightState = 1;
-              // Turns on the Move Right
-              MoveRight(1);
-              
+              // Turns on pins to move right
+              MoveRight();
+// Move Forward
             } else if (header.indexOf("GET /MoveForwardOn") >= 0) {
-              // Prints that we're moving Forward
+              // Prints that we're moving forward
               Serial.println("MoveForward");
 
-              // Turns off all other motion
-              if(outputLeftState){
-                MoveLeft(0);
-                outputLeftState = 0;
-              }
-              if(outputRightState){
-                MoveRight(0);
-                outputRightState = 0;
-              }
-              if(outputBackwardState){
-                MoveBackward(0);
-                outputBackwardState = 0;
-              }
-              if(outputRotLeftState){
-                RotateLeft(0);
-                outputRotLeftState = 0;
-              }
-              if(outputRotRightState){
-                RotateRight(0);
-                outputRotRightState = 0;
-              }
+              // Sets flags that we're moving forward
+              isMoveLeftOn = 0;
+              isMoveRightOn = 0;
+              isMoveForwardOn = 1;
+              isMoveBackwardOn = 0;
+              isRotateLeftOn = 0;
+              isRotateRightOn = 0;
 
-              // Sets that we're moving Forward
-              outputForwardState = 1;
-              // Turns on the Move Forward
-              MoveForward(1);
-              
+              // Turns on pins to move forward
+              MoveForward();
+// Move Backward
             } else if (header.indexOf("GET /MoveBackwardOn") >= 0) {
-              // Prints that we're moving Backward
+              // Prints that we're moving backward
               Serial.println("MoveBackward");
 
-              // Turns off all other motion
-              if(outputLeftState){
-                MoveLeft(0);
-                outputLeftState = 0;
-              }
-              if(outputRightState){
-                MoveRight(0);
-                outputRightState = 0;
-              }
-              if(outputForwardState){
-                MoveForward(0);
-                outputForwardState = 0;
-              }
-              if(outputRotLeftState){
-                RotateLeft(0);
-                outputRotLeftState = 0;
-              }
-              if(outputRotRightState){
-                RotateRight(0);
-                outputRotRightState = 0;
-              }
+              // Sets flags that we're moving backward
+              isMoveLeftOn = 0;
+              isMoveRightOn = 0;
+              isMoveForwardOn = 0;
+              isMoveBackwardOn = 1;
+              isRotateLeftOn = 0;
+              isRotateRightOn = 0;
 
-              // Sets that we're moving Forward
-              outputBackwardState = 1;
-              // Turns on the Move Forward
-              MoveBackward(1);
+              // Turns on pins to move backward
+              MoveBackward();
+// Rotate Left
             } else if (header.indexOf("GET /RotateLeftOn") >= 0) {
-              // Prints that we're rotating Left
+              // Prints that we're rotating left
               Serial.println("RotateLeft");
 
-              // Turns off all other motion
-              if(outputLeftState){
-                MoveLeft(0);
-                outputLeftState = 0;
-              }
-              if(outputRightState){
-                MoveRight(0);
-                outputRightState = 0;
-              }
-              if(outputForwardState){
-                MoveForward(0);
-                outputForwardState = 0;
-              }
-              if(outputBackwardState){
-                MoveBackward(0);
-                outputBackwardState = 0;
-              }
-              if(outputRotRightState){
-                RotateRight(0);
-                outputRotRightState = 0;
-              }
+              // Sets flags that we're rotating left
+              isMoveLeftOn = 0;
+              isMoveRightOn = 0;
+              isMoveForwardOn = 0;
+              isMoveBackwardOn = 0;
+              isRotateLeftOn = 1;
+              isRotateRightOn = 0;
 
-              // Sets that we're moving Forward
-              outputRotLeftState = 1;
-              // Turns on the Move Forward
-              RotateLeft(1);
+              // Turns on pins to rotate left
+              RotateLeft();
+// Rotate Right
             } else if (header.indexOf("GET /RotateRightOn") >= 0) {
-              // Prints that we're rotating Left
+              // Prints that we're rotating right
               Serial.println("RotateRight");
 
-              // Turns off all other motion
-              if(outputLeftState){
-                MoveLeft(0);
-                outputLeftState = 0;
-              }
-              if(outputRightState){
-                MoveRight(0);
-                outputRightState = 0;
-              }
-              if(outputForwardState){
-                MoveForward(0);
-                outputForwardState = 0;
-              }
-              if(outputBackwardState){
-                MoveBackward(0);
-                outputBackwardState = 0;
-              }
-              if(outputRotLeftState){
-                RotateLeft(0);
-                outputRotLeftState = 0;
-              }
+              // Sets flags that we're rotating right
+              isMoveLeftOn = 0;
+              isMoveRightOn = 0;
+              isMoveForwardOn = 0;
+              isMoveBackwardOn = 0;
+              isRotateLeftOn = 0;
+              isRotateRightOn = 1;
 
-              // Sets that we're moving Forward
-              outputRotRightState = 1;
-              // Turns on the Move Forward
-              RotateRight(1);
+              // Turns on pins to rotate right
+              RotateRight();
+// Stationary
             } else{
-              // Stationary: Turns off all other motion
-              if(outputLeftState){
-                MoveLeft(0);
-                outputLeftState = 0;
-              }
-              if(outputRightState){
-                MoveRight(0);
-                outputRightState = 0;
-              }
-              if(outputForwardState){
-                MoveForward(0);
-                outputForwardState = 0;
-              }
-              if(outputBackwardState){
-                MoveBackward(0);
-                outputBackwardState = 0;
-              }
-              if(outputRotLeftState){
-                RotateLeft(0);
-                outputRotLeftState = 0;
-              }
-              if(outputRotRightState){
-                RotateRight(0);
-                outputRotRightState = 0;
-              }
+              // Prints that the robot is stationary
+              Serial.println("Stationary");
+
+              // Set all other motion flags to 0
+              isMoveLeftOn = 0;
+              isMoveRightOn = 0;
+              isMoveForwardOn = 0;
+              isMoveBackwardOn = 0;
+              isRotateLeftOn = 0;
+              isRotateRightOn = 0;
+
+              // Turns off all pins
+              Stationary();
+
             }
             
             // Display the HTML web page
@@ -349,7 +252,7 @@ void loop(){
             // Display Move Left Button
             client.println("Move Left");
             // If the MoveLeft is off, it displays the MoveLeft button       
-            if (!outputLeftState) {
+            if (!isMoveLeftOn) {
               client.println("<p><a href=\"/MoveLeftOn\"><button class=\"button\">MoveLeft</button></a></p>");
             } else {
               client.println("<p><a href=\"/Stationary\"><button class=\"button button2\">OFF</button></a></p>");
@@ -358,7 +261,7 @@ void loop(){
             // Display Move Right Button
             client.println("Move Right");
             // If the MoveRight is off, it displays the MoveRight button       
-            if (!outputRightState) {
+            if (!isMoveRightOn) {
               client.println("<p><a href=\"/MoveRightOn\"><button class=\"button\">MoveRight</button></a></p>");
             } else {
               client.println("<p><a href=\"/Stationary\"><button class=\"button button2\">OFF</button></a></p>");
@@ -367,7 +270,7 @@ void loop(){
             // Display Move Forward Button
             client.println("Move Forward");
             // If the MoveForward is off, it displays the MoveForward button       
-            if (!outputForwardState) {
+            if (!isMoveForwardOn) {
               client.println("<p><a href=\"/MoveForwardOn\"><button class=\"button\">MoveForward</button></a></p>");
             } else {
               client.println("<p><a href=\"/Stationary\"><button class=\"button button2\">OFF</button></a></p>");
@@ -376,7 +279,7 @@ void loop(){
             // Display Move Backward Button
             client.println("Move Backward");
             // If the MoveBackward is off, it displays the MoveBackward button       
-            if (!outputBackwardState) {
+            if (!isMoveBackwardOn) {
               client.println("<p><a href=\"/MoveBackwardOn\"><button class=\"button\">MoveBackward</button></a></p>");
             } else {
               client.println("<p><a href=\"/Stationary\"><button class=\"button button2\">OFF</button></a></p>");
@@ -385,7 +288,7 @@ void loop(){
             // Display Rotate Left Button
             client.println("Rotate Left");
             // If the RotateLeft is off, it displays the RotateLeft button       
-            if (!outputRotLeftState) {
+            if (!isRotateLeftOn) {
               client.println("<p><a href=\"/RotateLeftOn\"><button class=\"button\">RotateLeft</button></a></p>");
             } else {
               client.println("<p><a href=\"/Stationary\"><button class=\"button button2\">OFF</button></a></p>");
@@ -394,7 +297,7 @@ void loop(){
             // Display Rotate Right Button
             client.println("Rotate Right");
             // If the RotateRight is off, it displays the RotateRight button       
-            if (!outputRotRightState) {
+            if (!isRotateRightOn) {
               client.println("<p><a href=\"/RotateRightOn\"><button class=\"button\">RotateRight</button></a></p>");
             } else {
               client.println("<p><a href=\"/Stationary\"><button class=\"button button2\">OFF</button></a></p>");
