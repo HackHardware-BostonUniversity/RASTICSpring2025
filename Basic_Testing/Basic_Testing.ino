@@ -15,6 +15,7 @@
  *   Gnd      --------> Gnd
  */
 
+// https://github.com/AyushMarsian/SR74HC595
 #include <SR74HC595.h>
 
 #define LED_BUILTIN 2
