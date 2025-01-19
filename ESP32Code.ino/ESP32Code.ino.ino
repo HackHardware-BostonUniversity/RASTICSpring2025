@@ -7,8 +7,8 @@
 #include <WiFi.h>
 
 // Replace with your network credentials
-const char* ssid = "REPLACE_WITH_YOUR_SSID";
-const char* password = "REPLACE_WITH_YOUR_PASSWORD";
+const char* ssid = "Olympus";
+const char* password = "choponionseatrocks";
 
 // Set web server port number to 80
 WiFiServer server(80);
@@ -68,7 +68,7 @@ const long timeoutTime = 2000;
 void setup() {
   Serial.begin(115200);
   // Sends a Hello World Debug message
-  Serial.println("Starting RASTICxHackH Spring 2025 Controller...")
+  Serial.println("Starting RASTICxHackH Spring 2025 Controller...");
   
   // Set outputs to LOW
   digitalWrite(output26, LOW);
