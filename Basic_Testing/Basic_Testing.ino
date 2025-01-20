@@ -20,23 +20,23 @@
 
 #define LED_BUILTIN 2
 
-#define M1 25 //M1 PWM pin, Driver Board pin 11
-#define M2 23 //M2 PWM pin, Driver Board pin 3
-#define M3 19 //M3 PWM pin, Driver Board pin 6
-#define M4 21 //M4 PWM pin, Driver Board pin 5
+#define M1 12 //M1 PWM pin, Driver Board pin 11
+#define M2 32 //M2 PWM pin, Driver Board pin 3
+#define M3 26 //M3 PWM pin, Driver Board pin 6
+#define M4 25 //M4 PWM pin, Driver Board pin 5
 
 #define M1_REV false // set to true to reverse M1 direction
 #define M2_REV false // set to true to reverse M2 direction
 #define M3_REV false // set to true to reverse M3 direction
-#define M4_REV false // set to true to reverse M4 direction
+#define M4_REV true // set to true to reverse M4 direction
 
 #define S1 32 //S1 PWM pin, Driver Board pin 9
 #define S2 33 //S2 PWM pin, Driver Board pin 10
 
-#define SR_DATA 4 // Serial Register data pin, Driver Board pin 8
-#define SR_CLK 22 // Serial Register clock pin, Driver Board pin 4
-#define SR_LTCH 26 // Serial Register Latch Pin, Driver Board pin 12
-#define SR_EN 18 // Serial Register Enable, Driver Board pin 7
+#define SR_DATA 14 // Serial Register data pin, Driver Board pin 8
+#define SR_CLK 33 // Serial Register clock pin, Driver Board pin 4
+#define SR_LTCH 13 // Serial Register Latch Pin, Driver Board pin 12
+#define SR_EN 27 // Serial Register Enable, Driver Board pin 7
 
 #define OFF 0b00  
 #define FWD 0b01 
@@ -80,12 +80,12 @@ void setM3(uint8_t speed, uint8_t dir)
 // sets the speed and direction of a motor, given by the pin number of that motor.
 {
   if (M3_REV) dir = ~dir; // Swaps FWD and REV if motor turns the wrong way
-  // Clear bits 0 and 6 in SR_state
-  motor_state &= ~(0b01000001);
-  // Set bit 0
-  motor_state |= (dir & 0b10) >> 1;
-  // Set bit 6
-  motor_state |= (dir & 0b01) << 6; 
+  // Clear bits 7 and 5 in SR_state
+  motor_state &= ~(0b10100000);
+  // Set bit 5
+  motor_state |= (dir & 0b10) << 4;
+  // Set bit 7
+  motor_state |= (dir & 0b01) << 7; 
   // Update the SR
   SR.sendToShiftRegister(motor_state);
   // set the speed
@@ -95,12 +95,12 @@ void setM4(uint8_t speed, uint8_t dir)
 // sets the speed and direction of a motor, given by the pin number of that motor.
 {
   if (M4_REV) dir = ~dir; // Swaps FWD and REV if motor turns the wrong way
-  // Clear bits 5 and 7 in SR_state
-  motor_state &= ~(0b10100000);
-  // Set bit 5
-  motor_state |= (dir & 0b10) << 4;
-  // Set bit 7
-  motor_state |= (dir & 0b01) << 7; 
+  // Clear bits 0 and 6 in SR_state
+  motor_state &= ~(0b01000001);
+  // Set bit 6
+  motor_state |= (dir & 0b10) << 5;
+  // Set bit 0
+  motor_state |= (dir & 0b01); 
   // Update the SR
   SR.sendToShiftRegister(motor_state);
   // set the speed
@@ -127,44 +127,17 @@ void setup()
 
   SR.sendToShiftRegister(0x00); // Set all output pin of shift register to 0.
 
+  // analogWrite(M1, 100);
+  // analogWrite(M2, 100);
+  // analogWrite(M3, 100);
+  // analogWrite(M4, 100);
 }
+
+uint8_t count=0;
 
 void loop() 
 {
-  Serial.println("beginning sequence...");
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(1000);
-  digitalWrite(LED_BUILTIN, LOW);
-
-  Serial.println("Activating M1");
-  setM1(100, FWD);
-  Serial.println(motor_state, BIN);
-  delay(2000);
-  setM1(0, OFF);
-  Serial.println(motor_state, BIN);
-  delay(500);
+  // Forward 
   
-  Serial.println("Activating M2");
-  setM2(100, FWD);
-  Serial.println(motor_state, BIN);
-  delay(2000);
-  setM2(0, OFF);
-  Serial.println(motor_state, BIN);
-  delay(500);
-  
-  Serial.println("Activating M3");
-  setM3(100, FWD);
-  Serial.println(motor_state, BIN);
-  delay(2000);
-  setM3(0, OFF);
-  Serial.println(motor_state, BIN);
-  delay(500);
 
-  Serial.println("Activating M4");
-  setM4(100, FWD);
-  Serial.println(motor_state, BIN);
-  delay(2000);
-  setM4(0, OFF);
-  Serial.println(motor_state, BIN);
-  delay(500);
 }
