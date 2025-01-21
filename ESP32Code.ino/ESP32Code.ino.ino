@@ -25,6 +25,9 @@
 // Load Dakota library
 // https://github.com/AyushMarsian/SR74HC595
 #include <SR74HC595.h>
+// https://github.com/bolderflight/sbus
+#include <sbus.h>
+
 
 // Replace with your network credentials
 const char* ssid = "Olympus";
@@ -56,6 +59,9 @@ String header;
 #define SR_CLK 33 // Serial Register clock pin, Driver Board pin 4
 #define SR_LTCH 13 // Serial Register Latch Pin, Driver Board pin 12
 #define SR_EN 27 // Serial Register Enable, Driver Board pin 7
+
+#define SBUS_RX 16 // Serial port for SBUS commands
+#define SBUS_TX 17 // Serial port for Telem return
 
 #define OFF 0b00  
 #define FWD 0b01 
