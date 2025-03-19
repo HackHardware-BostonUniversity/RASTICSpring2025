@@ -2,6 +2,7 @@
 
 // Load Wi-Fi library
 #include <WiFi.h>
+#include <ESP32Servo.h>
 
 // https://github.com/AyushMarsian/SR74HC595 <- this one sux don't use it
 // #include <SR74HC595.h>
@@ -22,16 +23,16 @@ const char* password = "choponionseatrocks";
 #define M3 26 //M3 PWM pin, Driver Board pin 6
 #define M4 25 //M4 PWM pin, Driver Board pin 5
 
-#define M1_REV true // set to true to reverse M1 direction
+#define M1_REV false // set to true to reverse M1 direction
 #define M2_REV false // set to true to reverse M2 direction
-#define M3_REV true // set to true to reverse M3 direction
-#define M4_REV false // set to true to reverse M4 direction
+#define M3_REV false // set to true to reverse M3 direction
+#define M4_REV true // set to true to reverse M4 direction
 
-#define S1 32 //S1 PWM pin, Driver Board pin 9
-#define S2 33 //S2 PWM pin, Driver Board pin 10
+#define S1 22 //S1 PWM pin, Driver Board pin 9
+#define S2 23 //S2 PWM pin, Driver Board pin 10
 
-#define SERIAL2_RX 18
-#define SERIAL2_TX 19
+#define SERIAL2_RX 16
+#define SERIAL2_TX 17
 #define SBUS_INVERT false
 
 #define SR_DATA 14 // Serial Register data pin, Driver Board pin 8
@@ -51,6 +52,8 @@ ShiftRegister74HC595<1> SR(SR_DATA, SR_CLK, SR_LTCH);
 // SR74HC595 SR(SR_DATA,SR_CLK,SR_LTCH); // Initialize Serial Register on Driver Board (Data, Clock, Latch)
 SBUS SBUS_RX(Serial2);
 WiFiServer server(80);
+
+Servo tilt_servo;  // create Servo object to control a servo
 
 // channel, fail safe, and lost frames data
 uint16_t channels[16];
@@ -191,6 +194,18 @@ void setup() {
   pinMode(SR_LTCH, OUTPUT);
   pinMode(SR_EN, OUTPUT);
 
+  setM1(0); // Set all the motor pins before attaching the servo, prevents double use of PWM generators
+  setM2(0);
+  setM3(0);
+  setM4(0);
+
+  ESP32PWM::allocateTimer(0);
+	ESP32PWM::allocateTimer(1);
+	ESP32PWM::allocateTimer(2);
+	ESP32PWM::allocateTimer(3);
+  tilt_servo.setPeriodHertz(50);    // standard 50 hz servo
+	tilt_servo.attach(S1, 800, 2200);
+
   digitalWrite(SR_EN, LOW); // Activate the Serial register (Active Low)
 
   SR.setAllLow(); // Set all output pin of shift register to 0.
@@ -217,19 +232,20 @@ int16_t w_m1 = 0;
 int16_t w_m2 = 0;
 int16_t w_m3 = 0;
 int16_t w_m4 = 0;
+uint8_t tilt_pos = 90;    // variable to store the servo position
 
 void loop()
 {
-  for (uint8_t i =50; i < 200; i = i+10)
-  // // handleClient(); // Handle incoming client requests
-  // // look for a good SBUS packet from the receiver
   if(SBUS_RX.read(&channels[0], &SBUS_failSafe, &SBUS_lostFrame))
   {
-    if (channels[0] > 180) digitalWrite(LED_BUILTIN, HIGH);
-    else digitalWrite(LED_BUILTIN, LOW);
     theta_vel = map(channels[3], 172, 1811, -255, 255);
     x_vel     = map(channels[2], 172, 1811, -255, 255);
     y_vel     = map(channels[1], 172, 1811, 255, -255);
+    tilt_pos  = map(channels[0], 172, 1811, 30,   157);
+
+    tilt_servo.write(tilt_pos);
+    // Serial.println(tilt_pos);
+    // delay(20);
 
     // inverse kinematics
     w_m1 = (x_vel + y_vel - theta_vel)/3;
@@ -243,11 +259,6 @@ void loop()
     setM4(w_m4);
 
     SR.updateRegisters();
-
-    // setDebugMessage("Theta: " + String(theta_vel) + "; X: " + 
-    //   String(x_vel) + "; Y: " + String(y_vel) + "\n"
-    //   + "M1: " + String(w_m1) + "; M2: " + String(w_m2)
-    //   + "; M3: " + String(w_m3) + "; M4: " + String(w_m4) );
   }
   
 }

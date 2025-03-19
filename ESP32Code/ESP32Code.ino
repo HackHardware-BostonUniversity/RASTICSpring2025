@@ -1,37 +1,14 @@
-/*********
-  Rui Santos
-  Complete project details at https://randomnerdtutorials.com  
-*********/
 
-/*  Copyright to AyushMarsian(Ankit Ghevariya)
- *  Licence GNU GPL V3
- *  
- *  Example for use shift register with Arduino UNO
- *  Written by Ankit Ghevariya, public domain
- *  
- *  You have to connect pin as written below 
- *  (74HC595) --------- (Arduino)
- *   Vcc      --------> 5v 
- *   MR       --------> 5v
- *   DS       --------> Digital 5
- *   SH_CP    --------> Digital 6
- *   ST_CP    --------> Digital 7
- *   OE       --------> Gnd
- *   Gnd      --------> Gnd
- */
 
 // Load Wi-Fi library
 #include <WiFi.h>
-// Load Dakota library
-// https://github.com/AyushMarsian/SR74HC595
-#include <SR74HC595.h>
-// https://github.com/bolderflight/sbus
-#include <sbus.h>
-
+// Load SR library
+// https://github.com/Simsso/ShiftRegister74HC595
+#include <ShiftRegister74HC595.h>
 
 // Replace with your network credentials
-const char* ssid = "Olympus";
-const char* password = "choponionseatrocks";
+const char* ssid = "rastic";
+const char* password = "botbotbot";
 
 // Set web server port number to 80
 WiFiServer server(80);
@@ -42,26 +19,23 @@ String header;
 // Pin Definitions
 #define LED_BUILTIN 2
 
-#define M1 12 //M1 PWM pin, Driver Board pin 11
-#define M2 32 //M2 PWM pin, Driver Board pin 3
-#define M3 26 //M3 PWM pin, Driver Board pin 6
-#define M4 25 //M4 PWM pin, Driver Board pin 5
+#define M1 17 //M1 PWM pin, Driver Board pin 11
+#define M2 26 //M2 PWM pin, Driver Board pin 3
+#define M3 13 //M3 PWM pin, Driver Board pin 6
+#define M4 14 //M4 PWM pin, Driver Board pin 5
 
 #define M1_REV false // set to true to reverse M1 direction
-#define M2_REV false // set to true to reverse M2 direction
+#define M2_REV true // set to true to reverse M2 direction
 #define M3_REV false // set to true to reverse M3 direction
-#define M4_REV true // set to true to reverse M4 direction
+#define M4_REV false // set to true to reverse M4 direction
 
-#define S1 32 //S1 PWM pin, Driver Board pin 9
-#define S2 33 //S2 PWM pin, Driver Board pin 10
+#define S1 19 //S1 PWM pin, Driver Board pin 9
+#define S2 18 //S2 PWM pin, Driver Board pin 10
 
-#define SR_DATA 14 // Serial Register data pin, Driver Board pin 8
-#define SR_CLK 33 // Serial Register clock pin, Driver Board pin 4
-#define SR_LTCH 13 // Serial Register Latch Pin, Driver Board pin 12
-#define SR_EN 27 // Serial Register Enable, Driver Board pin 7
-
-#define SBUS_RX 16 // Serial port for SBUS commands
-#define SBUS_TX 17 // Serial port for Telem return
+#define SR_DATA 23 // Serial Register data pin, Driver Board pin 8
+#define SR_CLK 25 // Serial Register clock pin, Driver Board pin 4
+#define SR_LTCH 16 // Serial Register Latch Pin, Driver Board pin 12
+#define SR_EN 12 // Serial Register Enable, Driver Board pin 7
 
 #define OFF 0b00  
 #define FWD 0b01 
@@ -69,7 +43,7 @@ String header;
 
 #define MOVESPEED 130 // default speed for movements
 
-SR74HC595 SR(SR_DATA,SR_CLK,SR_LTCH); // Initialize Serial Register on Driver Board (Data, Clock, Latch)
+ShiftRegister74HC595<1> SR(SR_DATA, SR_CLK, SR_LTCH); // Initialize Serial Register on Driver Board (Data, Clock, Latch)
 
 uint8_t motor_state = 0x00; // bitstring that defines the behavior of each motor driver via the Serial Register
 
@@ -81,8 +55,10 @@ void setM1(uint8_t speed, uint8_t dir)
   motor_state &= ~(0b00001100); // Mask to clear bits 2 and 3
   // Set bits 2 and 3 with the value of dir
   motor_state |= (dir << 2);    // Shift dir to align with bits 2 and 3, then OR
+  // create temporary const for the SR
+  const uint8_t tmp = (motor_state);
   // Update the SR
-  SR.sendToShiftRegister(motor_state);
+  SR.setAll(&tmp);
   // set the speed
   analogWrite(M1, speed);
 }
@@ -97,8 +73,10 @@ void setM2(uint8_t speed, uint8_t dir)
   motor_state |= (dir & 0b10);
   // Set bit 4
   motor_state |= (dir & 0b01) << 4; // Shift left 4
+  // create temporary const for the SR
+  const uint8_t tmp = (motor_state);
   // Update the SR
-  SR.sendToShiftRegister(motor_state);
+  SR.setAll(&tmp);
   // set the speed
   analogWrite(M2, speed);
 }
@@ -113,8 +91,10 @@ void setM3(uint8_t speed, uint8_t dir)
   motor_state |= (dir & 0b10) << 4;
   // Set bit 7
   motor_state |= (dir & 0b01) << 7; 
+  // create temporary const for the SR
+  const uint8_t tmp = (motor_state);
   // Update the SR
-  SR.sendToShiftRegister(motor_state);
+  SR.setAll(&tmp);
   // set the speed
   analogWrite(M3, speed);
 }
@@ -128,8 +108,10 @@ void setM4(uint8_t speed, uint8_t dir)
   motor_state |= (dir & 0b10) << 5;
   // Set bit 0
   motor_state |= (dir & 0b01); 
+  // create temporary const for the SR
+  const uint8_t tmp = (motor_state);
   // Update the SR
-  SR.sendToShiftRegister(motor_state);
+  SR.setAll(&tmp);
   // set the speed
   analogWrite(M4, speed);
 }
@@ -221,7 +203,8 @@ void setup() {
 
   digitalWrite(SR_EN, LOW); // Activate the Serial register (Active Low)
 
-  SR.sendToShiftRegister(0x00); // Set all output pin of shift register to 0.
+  const uint8_t tmp = 0;
+  SR.setAll(&tmp); // Set all output pin of shift register to 0.
 
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Connecting to ");
