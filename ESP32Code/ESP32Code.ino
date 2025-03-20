@@ -1,4 +1,23 @@
+// by Dakota Winslow and Justin Nascimento
+// For RASTICxHachHardware Spring 2025
 
+/*
+This example firmware is to give you a starting point for your robot. 
+It allows control via a simple web server. You should expand on this code
+to improve the functionality of your robot, or simply ignore this and
+write your own code from scratch.
+
+The pin definitions below are for the QA009 ESP32 Max V1.0. This board 
+conveniently has a pin layout that matches the Arduino Uno, allowwing the 
+use of the L293D Motor Driver Shield. 
+
+***IMPORTANT NOTE***: The ESP32 has a few pins that must not be forced
+low/high during boot. Unfortunately, pin 12 is one of those pins, and it is 
+mapped to pin 7 on the L293D Motor Driver Shield. Pin 7 is the enable pin of
+the shift register on the shield, which is held high (off) by default. To
+avoid boot issues, you must remove pin 7 from the shield and connect the the
+pad to another unused pin. In this code, we use pin 4 as the new enable pin.
+*/
 
 // Load Wi-Fi library
 #include <WiFi.h>
@@ -35,7 +54,8 @@ String header;
 #define SR_DATA 23 // Serial Register data pin, Driver Board pin 8
 #define SR_CLK 25 // Serial Register clock pin, Driver Board pin 4
 #define SR_LTCH 16 // Serial Register Latch Pin, Driver Board pin 12
-#define SR_EN 12 // Serial Register Enable, Driver Board pin 7
+#define SR_EN 4 // Serial Register Enable, Driver Board pin 7
+// ^ the SR_EN pin is moved from pin 12 to pin 4 to avoid ESP32 boot issues
 
 #define OFF 0b00  
 #define FWD 0b01 
@@ -201,10 +221,10 @@ void setup() {
   pinMode(SR_LTCH, OUTPUT);
   pinMode(SR_EN, OUTPUT);
 
-  digitalWrite(SR_EN, LOW); // Activate the Serial register (Active Low)
-
   const uint8_t tmp = 0;
   SR.setAll(&tmp); // Set all output pin of shift register to 0.
+
+  digitalWrite(SR_EN, LOW); // Activate the Serial register (Active Low)
 
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Connecting to ");
