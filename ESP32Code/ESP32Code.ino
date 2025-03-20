@@ -7,8 +7,8 @@
 #include <ShiftRegister74HC595.h>
 
 // Replace with your network credentials
-const char* ssid = "rastic";
-const char* password = "botbotbot";
+const char* ssid = "hackhardware";
+const char* password = "spring25";
 
 // Set web server port number to 80
 WiFiServer server(80);
